@@ -1,0 +1,209 @@
+#16-04-2020
+go atlas
+#ferroelectric fet example
+#
+#mesh and structure definition
+#
+mesh space.multi=1.0 outf=soi_ferro.str
+x.m l=0 s=0.1
+x.m l=0.25 s=0.1
+x.m l=0.5 s=0.05
+x.m l=4.5 s=0.05
+x.m l=4.75 s=0.1
+x.m l=5.0 s=0.1
+
+y.mesh loc=-0.131 spac=0.02
+y.mesh loc=-0.101 spac=0.02
+y.mesh loc=0.00 spac=0.005
+y.mesh loc=0.05 spac=0.02
+y.mesh loc=0.1 spac=0.01
+y.mesh loc=0.35 spac=0.25
+y.mesh loc=0.65 spac=0.25
+y.mesh loc=1.0 spac=0.5
+
+
+region num=1 silicon y.min=0.0
+region num=2 oxide y.max=0.0 y.min=-0.131
+#region num=3 user.material=ferro y.max=-0.001 y.min=-0.101
+#region num=4 oxide y.max=-0.101 y.min=-0.131
+region num=3 material=silicon y.min=0.05 y.max=0.35
+region num=4 material=SiO2 y.min=0.35 y.max=0.65
+region num=5 material=silicon y.min=0.65 y.max=1.
+
+#
+#electrode here
+#1-SOURCE
+#2-DRAIN
+#3-GATE
+#4-SUBSTRATE
+electrode num=1 name=source y.max=0.0 x.max=0.25
+electrode num=2 name=drain y.max=0.0 x.min=4.75
+electrode num=3 name=gate top x.min=0.5 x.max=4.5
+electrode num=4 name=substrate bottom
+
+#
+#define Doping Concentration
+#
+doping region=5 conc=1e15 uniform p.type
+doping region=7 conc=1e15 uniform p.type
+#doping uniform conc=3e16 p.type
+#doping uniform concentration=1E18 p.type region=5
+#doping uniform concentration=1E18 p.type region=7
+doping gaus conc=1e19 n.type x.right=0.5 char=0.075
+doping gaus conc=1e19 n.type x.left=4.5 char=0.075
+
+#
+#define ferroelectric material
+#
+#model region=3 ferro
+#material region=3 material=ferro user.group=insulator user.default=oxide ferro.ps=0.5e6 ferro.pr=0.4e-6 ferro.ec=100000.0 ferro.eps=10.0
+#material region=3 ferro.ec=100000.0 ferro.pr=0.4e-6 ferro.ps=0.5e6 ferro.epsf=10.0
+#
+#interf qf=3e10
+interf       qf=3e10 y.max=0.05
+interf       qf=1e11 y.min=0.05
+#
+
+#
+#gate workfunction and channel mobility
+#
+contact num=3 n.poly
+material mun=800.0
+
+#
+#obtained Id-Vg characteristics
+#
+method newton trap
+solve vgate=-5
+log outf=soi_ferro_0.log
+tonyplot soi_ferro_0.log -set soi_ferro_0.set
+solve
+log outf=soi_ferro_1.log
+tonyplot soi_ferro_1.log -set soi_ferro_1.set
+solve vd=0.1
+solve vd=0.2
+log outf=soi_ferro_2.log
+tonyplot soi_ferro_2.log -set soi_ferro_2.set
+solve prev
+solve vdrain=0.1
+solve vdrain=0.2
+solve prev
+log outf=gate.log
+solve vgate=0 vfinal=2 vstep=0.05 name=gate
+tonyplot -overlay gate.log	 
+solve prev
+log outf=sahil_prev_1.log
+solve vfinal=3.3 vstep=0.1 name=gate
+log outf=tmp.log
+tonyplot -overlay sahil_prev_1.log -set sahil_prev_1.set
+tonyplot tmp.log -set tmp.set
+#
+#forward sweep
+#
+#log outf=soi_ferro_1.log
+#solve vgate=0.0 vstep=0.1 vfinal=8.0 name=gate ac freq=1e6
+#
+#reverse sweep
+#
+#material ferro.ec=-100000.0
+#solve vstep=-0.1 vfinal=0.0 name=gate ac freq=1e6  
+
+#tonyplot soi_ferro.str -set soi_ferro_0.set
+#tonyplot soi_ferro_1.log -set soi_ferro_1.set
+#tonyplot soi_ferro_2.log -set soi_ferro_2.set
+
+
+###############################################################Now do ID/VDS characteristic
+quit
+#------------------------------------------END-----------------------------------------------------
+# (c) Silvaco Inc., 2018
+go atlas
+TITLE SOI device simulation
+#
+# 0.1um of silicon on 0.4um oxide substrate     
+#
+mesh   space.mult=1.0
+# 
+x.m l=0 s=0.1
+x.m l=0.25 s=0.1
+x.m l=0.5 s=0.05
+x.m l=4.5 s=0.05
+x.m l=4.75 s=0.1
+x.m l=5.0 s=0.1
+#
+y.mesh loc=-0.131 spac=0.02
+y.mesh loc=0.00 spac=0.005
+y.mesh loc=0.05 spac=0.02
+y.mesh loc=0.1 spac=0.01
+y.mesh loc=1.0 spac=0.5
+#
+region      num=1 y.max=0    oxide 
+region      num=2 y.min=0    y.max=0.1 silicon
+region      num=3 y.min=0.1  oxide
+#
+#*********** define the electrodes ************
+# #1-GATE #2-SOURCE #3-DRAIN #4-SUBSTRATE(below oxide)
+#
+
+electrode num=1 name=source y.max=0.0 x.max=0.25
+electrode num=2 name=drain y.max=0.0 x.min=4.75
+electrode num=3 name=gate top x.min=0.5 x.max=4.5
+electrode num=4 name=substrate bottom
+
+#
+#*********** define the doping concentrations *****
+#
+doping       uniform conc=1e15 p.type  reg=2
+doping gaus conc=1e19 n.type x.right=0.5 char=0.075
+doping gaus conc=1e19 n.type x.left=4.5 char=0.075
+save         outf=soiex02_0.str
+#tonyplot     soiex02_0.str -set soiex02_0.set
+#
+# set interface charge separately on front and back oxide interfaces
+interf       qf=3e10 y.max=0.05
+interf       qf=1e11 y.min=0.05
+#
+# set workfunction of gate
+contact      name=gate n.poly
+#
+# select models
+models       conmob srh auger bgn fldmob print 
+#
+solve init
+#
+# do IDVG characteristic
+#
+method       newton    trap 
+solve        prev 
+solve        vgate=-0.2 
+solve        vdrain=0.05
+solve        vdrain=0.1
+solve        vdrain=0.2
+solve	     prev
+#
+# ramp gate voltage
+#log          outf=soiex02_1.log master
+#solve vgate=0 vfinal=2 vstep=0.05 name=gate
+#solve       vgate=0.1 vstep=0.1 name=gate vfinal=1.5
+#
+# plot resultant IDVG threshold voltage curve 
+#tonyplot    soiex02_1.log -set soiex02_1.set
+#
+# plot resultant IDVG subthreshold slope curve 
+tonyplot    soiex02_1.log -set soiex02_2.set
+#
+#
+extract name="subvt" \
+        1.0/slope(maxslope(curve(v."gate",log10(abs(i."drain")))))
+#
+#
+extract name="vt" (xintercept(maxslope(curve(v."gate",abs(i."drain")))) \
+        - abs(ave(v."drain"))/2.0)
+#
+quit
+
+
+
+
+
+
